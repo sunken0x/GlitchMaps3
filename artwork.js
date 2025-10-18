@@ -2,13 +2,6 @@
 // 256.art Collection by Sunken 0x
 // THREE.js is loaded by 256.art from EthFS
 
-// Create container div for Three.js
-const container = document.createElement('div');
-container.id = 'container';
-container.style.cssText = 'width:100vw;height:100vh;margin:0;padding:0;overflow:hidden;';
-document.body.appendChild(container);
-document.body.style.cssText = 'margin:0;padding:0;overflow:hidden;';
-
 // 256.art Random class for deterministic generation
 class Random {
     constructor() {
@@ -147,8 +140,6 @@ const speedMultiplier = speeds[TRAITS.speed];
 class GlitchWave {
     constructor(container, params) {
         this.container = container;
-        this.w = window.innerWidth;
-        this.h = window.innerHeight;
         
         this.flashSpeed = params.flashSpeed;
         this.lineOpacity = params.lineOpacity;
@@ -376,15 +367,22 @@ class GlitchWave {
     }
 
     handleResize() {
-        this.w = window.innerWidth;
-        this.h = window.innerHeight;
+        const dp = window.devicePixelRatio;
+        const ih = window.innerHeight * dp;
+        const iw = window.innerWidth * dp;
+        const aspectRatio = 1;
+        
+        if (ih / iw < aspectRatio) {
+            this.h = ih;
+            this.w = ih / aspectRatio;
+        } else {
+            this.w = iw;
+            this.h = iw * aspectRatio;
+        }
+        
         this.camera.aspect = this.w / this.h;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(this.w, this.h);
-        
-        // Update container size
-        this.container.style.width = this.w + 'px';
-        this.container.style.height = this.h + 'px';
+        this.renderer.setSize(this.w / dp, this.h / dp);
     }
 }
 
