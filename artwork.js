@@ -163,13 +163,28 @@ class GlitchWave {
 
     init() {
         this.scene = new THREE.Scene();
+        
+        // Calculate proper canvas size like 256.art
+        const dp = window.devicePixelRatio;
+        const ih = window.innerHeight * dp;
+        const iw = window.innerWidth * dp;
+        const aspectRatio = 1; // Square aspect ratio
+        
+        if (ih / iw < aspectRatio) {
+            this.h = ih;
+            this.w = ih / aspectRatio;
+        } else {
+            this.w = iw;
+            this.h = iw * aspectRatio;
+        }
+        
         this.camera = new THREE.PerspectiveCamera(75, this.w / this.h, 0.1, 1000);
         this.camera.position.set(0, 0, 17.7);
         this.camera.lookAt(0, 0, 0);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-        this.renderer.setSize(this.w, this.h);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(this.w / dp, this.h / dp);
+        this.renderer.setPixelRatio(dp);
         this.container.appendChild(this.renderer.domElement);
 
         this.createBackgroundPlane();
