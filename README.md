@@ -58,9 +58,9 @@ Circular Ripple, Linear Wave, Diagonal Sweep, Radial Burst, Cross Pattern, Squar
 
 ## Live Preview
 
-[View Live Demo](https://yourusername.github.io/glitch-maps/)
+[View Live Demo](https://sunken0x.github.io/glitch-maps/)
 
-*(Replace `yourusername` with your actual GitHub username)*
+
 
 ---
 
