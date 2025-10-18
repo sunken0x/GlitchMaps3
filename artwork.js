@@ -138,9 +138,8 @@ const speedMultiplier = speeds[TRAITS.speed];
 
 // Glitch Wave Class
 class GlitchWave {
-    constructor(container, params) {
-        this.container = container;
-        
+    constructor(canvas, params) {
+        this.canvas = canvas;
         this.flashSpeed = params.flashSpeed;
         this.lineOpacity = params.lineOpacity;
         this.gridSpacing = params.gridSpacing;
@@ -149,34 +148,39 @@ class GlitchWave {
         this.timeOffset = parseInt(inputData.hash.substr(10, 8), 16) % 100000;
         this.startTime = Date.now();
         
-        this.init();
+        this.setup();
     }
 
-    init() {
-        this.scene = new THREE.Scene();
-        
-        // Calculate proper canvas size like 256.art
-        const dp = window.devicePixelRatio;
-        const ih = window.innerHeight * dp;
-        const iw = window.innerWidth * dp;
-        const aspectRatio = 1; // Square aspect ratio
+    setup() {
+        // 256.art sizing pattern
+        let dp = window.devicePixelRatio;
+        let ih = window.innerHeight * dp;
+        let iw = window.innerWidth * dp;
+        let aspectRatio = 1; // Square
         
         if (ih / iw < aspectRatio) {
-            this.h = ih;
-            this.w = ih / aspectRatio;
+            this.canvas.height = ih;
+            this.canvas.width = ih / aspectRatio;
         } else {
-            this.w = iw;
-            this.h = iw * aspectRatio;
+            this.canvas.width = iw;
+            this.canvas.height = iw * aspectRatio;
         }
         
+        this.w = this.canvas.width;
+        this.h = this.canvas.height;
+        
+        this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, this.w / this.h, 0.1, 1000);
         this.camera.position.set(0, 0, 17.7);
         this.camera.lookAt(0, 0, 0);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        this.renderer = new THREE.WebGLRenderer({ 
+            canvas: this.canvas,
+            antialias: true, 
+            preserveDrawingBuffer: true 
+        });
         this.renderer.setSize(this.w / dp, this.h / dp);
         this.renderer.setPixelRatio(dp);
-        this.container.appendChild(this.renderer.domElement);
 
         this.createBackgroundPlane();
         this.createGrid();
@@ -186,7 +190,14 @@ class GlitchWave {
     }
 
     createBackgroundPlane() {
-        const bgGeometry = new THREE.PlaneGeometry(200, 200);
+        // Calculate visible area at background plane's z position
+        const distance = Math.abs(this.camera.position.z - (-10));
+        const vFOV = (75 * Math.PI) / 180;
+        const visibleHeight = 2 * Math.tan(vFOV / 2) * distance;
+        const visibleWidth = visibleHeight * this.camera.aspect;
+        
+        // Make background 50% larger to ensure full coverage
+        const bgGeometry = new THREE.PlaneGeometry(visibleWidth * 1.5, visibleHeight * 1.5);
         const bgMaterial = new THREE.MeshBasicMaterial({ color: this.colorScheme.bgColor });
         this.bgPlane = new THREE.Mesh(bgGeometry, bgMaterial);
         this.bgPlane.position.z = -10;
@@ -367,27 +378,53 @@ class GlitchWave {
     }
 
     handleResize() {
-        const dp = window.devicePixelRatio;
-        const ih = window.innerHeight * dp;
-        const iw = window.innerWidth * dp;
-        const aspectRatio = 1;
+        let dp = window.devicePixelRatio;
+        let ih = window.innerHeight * dp;
+        let iw = window.innerWidth * dp;
+        let aspectRatio = 1;
         
         if (ih / iw < aspectRatio) {
-            this.h = ih;
-            this.w = ih / aspectRatio;
+            this.canvas.height = ih;
+            this.canvas.width = ih / aspectRatio;
         } else {
-            this.w = iw;
-            this.h = iw * aspectRatio;
+            this.canvas.width = iw;
+            this.canvas.height = iw * aspectRatio;
         }
+        
+        this.w = this.canvas.width;
+        this.h = this.canvas.height;
         
         this.camera.aspect = this.w / this.h;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.w / dp, this.h / dp);
+        
+        // Update background plane size to match new aspect ratio
+        if (this.bgPlane) {
+            const distance = Math.abs(this.camera.position.z - (-10));
+            const vFOV = (75 * Math.PI) / 180;
+            const visibleHeight = 2 * Math.tan(vFOV / 2) * distance;
+            const visibleWidth = visibleHeight * this.camera.aspect;
+            
+            this.bgPlane.geometry.dispose();
+            this.bgPlane.geometry = new THREE.PlaneGeometry(visibleWidth * 1.5, visibleHeight * 1.5);
+        }
     }
 }
 
-// Initialize - container is already created above
-const glitchWave = new GlitchWave(container, {
+// Create canvas like 256.art pattern
+let c = document.createElement("canvas");
+document.body.appendChild(c);
+document.body.style.margin = '0';
+document.body.style.padding = '0';
+document.body.style.overflow = 'hidden';
+document.body.style.display = 'flex';
+document.body.style.justifyContent = 'center';
+document.body.style.alignItems = 'center';
+document.body.style.minHeight = '100vh';
+document.body.style.backgroundColor = '#000';
+
+// Initialize
+const glitchWave = new GlitchWave(c, {
     flashSpeed: flashSpeed,
     lineOpacity: lineOpacity,
     gridSpacing: gridSpacing,
@@ -396,6 +433,6 @@ const glitchWave = new GlitchWave(container, {
 
 // Set window.rendered for 256.art
 setTimeout(() => {
-    window.rendered = glitchWave.renderer.domElement;
+    window.rendered = c;
     console.log('✅ Glitch Maps ready for 256.art');
 }, 1000);
