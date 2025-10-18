@@ -168,11 +168,15 @@ class GlitchWave {
         this.renderer = new THREE.WebGLRenderer({ 
             canvas: this.canvas,
             antialias: true, 
-            preserveDrawingBuffer: true 
+            preserveDrawingBuffer: true,
+            alpha: false
         });
         this.renderer.setSize(this.w / dp, this.h / dp);
         this.renderer.setPixelRatio(dp);
         this.renderer.setClearColor(this.colorScheme.bgColor);
+        this.renderer.autoClear = true;
+        // Disable any clipping
+        this.renderer.localClippingEnabled = false;
 
         this.createBackgroundPlane();
         this.createGrid();
