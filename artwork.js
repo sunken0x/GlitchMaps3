@@ -152,10 +152,19 @@ class GlitchWave {
     }
 
     setup() {
-        // Canvas fills entire window (not square!)
+        // 256.art sizing pattern
         let dp = window.devicePixelRatio;
-        this.canvas.width = window.innerWidth * dp;
-        this.canvas.height = window.innerHeight * dp;
+        let ih = window.innerHeight * dp;
+        let iw = window.innerWidth * dp;
+        let aspectRatio = 1; // Square
+        
+        if (ih / iw < aspectRatio) {
+            this.canvas.height = ih;
+            this.canvas.width = ih / aspectRatio;
+        } else {
+            this.canvas.width = iw;
+            this.canvas.height = iw * aspectRatio;
+        }
         
         this.w = this.canvas.width;
         this.h = this.canvas.height;
@@ -172,6 +181,7 @@ class GlitchWave {
         });
         this.renderer.setSize(this.w / dp, this.h / dp);
         this.renderer.setPixelRatio(dp);
+        // Set renderer clear color to match background!
         this.renderer.setClearColor(this.colorScheme.bgColor);
 
         this.createBackgroundPlane();
@@ -371,8 +381,17 @@ class GlitchWave {
 
     handleResize() {
         let dp = window.devicePixelRatio;
-        this.canvas.width = window.innerWidth * dp;
-        this.canvas.height = window.innerHeight * dp;
+        let ih = window.innerHeight * dp;
+        let iw = window.innerWidth * dp;
+        let aspectRatio = 1;
+        
+        if (ih / iw < aspectRatio) {
+            this.canvas.height = ih;
+            this.canvas.width = ih / aspectRatio;
+        } else {
+            this.canvas.width = iw;
+            this.canvas.height = iw * aspectRatio;
+        }
         
         this.w = this.canvas.width;
         this.h = this.canvas.height;
@@ -381,7 +400,7 @@ class GlitchWave {
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.w / dp, this.h / dp);
         
-        // Update background plane to fill entire canvas
+        // Update background plane size to match new aspect ratio
         if (this.bgPlane) {
             const distance = Math.abs(this.camera.position.z - (-10));
             const vFOV = (75 * Math.PI) / 180;
@@ -396,9 +415,6 @@ class GlitchWave {
 
 // Create canvas like 256.art pattern
 let c = document.createElement("canvas");
-c.style.display = 'block';
-c.style.width = '100%';
-c.style.height = '100%';
 document.body.appendChild(c);
 
 // Set body background to match color scheme
@@ -406,6 +422,10 @@ const bodyBgColor = '#' + colorScheme.bgColor.toString(16).padStart(6, '0');
 document.body.style.margin = '0';
 document.body.style.padding = '0';
 document.body.style.overflow = 'hidden';
+document.body.style.display = 'flex';
+document.body.style.justifyContent = 'center';
+document.body.style.alignItems = 'center';
+document.body.style.minHeight = '100vh';
 document.body.style.backgroundColor = bodyBgColor;
 
 // Initialize
