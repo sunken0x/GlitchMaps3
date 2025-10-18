@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glitch Maps - Sunken 0x</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Simulated inputData for testing -->
+    <script>
+        window.inputData = {
+            hash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
+            tokenId: '1',
+            blockNumber: Math.floor(Math.random() * 1000000).toString(),
+            blockTimestamp: Date.now(),
+            ownerOfPiece: '0x1234567890123456789012345678901234567890',
+        };
+    </script>
+    
+    <!-- Load artwork.js -->
+    <script src="artwork.js"></script>
+</body>
+</html>
