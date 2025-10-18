@@ -181,6 +181,8 @@ class GlitchWave {
         });
         this.renderer.setSize(this.w / dp, this.h / dp);
         this.renderer.setPixelRatio(dp);
+        // Set renderer clear color to match background!
+        this.renderer.setClearColor(this.colorScheme.bgColor);
 
         this.createBackgroundPlane();
         this.createGrid();
