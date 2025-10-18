@@ -202,9 +202,12 @@ class GlitchWave {
 
     createGrid() {
         const pointsPerLine = lineCount;
-        const spacing = this.gridSpacing;
-        this.lines = [];
+        // Scale grid spacing based on viewport size
+        const baseSpacing = this.gridSpacing;
+        const viewportScale = Math.min(this.w, this.h) / 2000; // Scale factor based on viewport
+        const spacing = baseSpacing * viewportScale;
         
+        this.lines = [];
         this.linesGroup = new THREE.Group();
         this.scene.add(this.linesGroup);
 
