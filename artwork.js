@@ -416,6 +416,9 @@ class GlitchWave {
 // Create canvas like 256.art pattern
 let c = document.createElement("canvas");
 document.body.appendChild(c);
+
+// Set body background to match color scheme
+const bodyBgColor = '#' + colorScheme.bgColor.toString(16).padStart(6, '0');
 document.body.style.margin = '0';
 document.body.style.padding = '0';
 document.body.style.overflow = 'hidden';
@@ -423,7 +426,7 @@ document.body.style.display = 'flex';
 document.body.style.justifyContent = 'center';
 document.body.style.alignItems = 'center';
 document.body.style.minHeight = '100vh';
-document.body.style.backgroundColor = '#000';
+document.body.style.backgroundColor = bodyBgColor;
 
 // Initialize
 const glitchWave = new GlitchWave(c, {
