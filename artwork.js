@@ -366,6 +366,10 @@ class GlitchWave {
         this.camera.aspect = this.w / this.h;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.w, this.h);
+        
+        // Update container size
+        this.container.style.width = this.w + 'px';
+        this.container.style.height = this.h + 'px';
     }
 }
 
