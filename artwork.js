@@ -120,7 +120,7 @@ const chaosParams = {
     'Turbulent': { glitchIntensity: 3.0, octaves: 3 },
     'Chaotic': { glitchIntensity: 4.5, octaves: 3 },
     'Fractal Chaos': { glitchIntensity: 5.0, octaves: 4 },
-    'Fractal Storm': { glitchIntensity: 5.5, octaves: 4 } // Reduced from 6.5 to 5.5
+    'Fractal Storm': { glitchIntensity: 5.5, octaves: 4 }
 };
 
 const gridDensities = { 'Dense': 55 };
@@ -152,7 +152,7 @@ class GlitchWave {
     }
 
     setup() {
-        // Canvas fills entire window (not square!)
+        // Canvas fills entire window
         let dp = window.devicePixelRatio;
         this.canvas.width = window.innerWidth * dp;
         this.canvas.height = window.innerHeight * dp;
@@ -161,7 +161,7 @@ class GlitchWave {
         this.h = this.canvas.height;
         
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, this.w / this.h, 0.1, 2000); // Increased far plane from 1000 to 2000
+        this.camera = new THREE.PerspectiveCamera(75, this.w / this.h, 0.1, 2000);
         this.camera.position.set(0, 0, 17.7);
         this.camera.lookAt(0, 0, 0);
 
@@ -175,7 +175,6 @@ class GlitchWave {
         this.renderer.setPixelRatio(dp);
         this.renderer.setClearColor(this.colorScheme.bgColor);
         this.renderer.autoClear = true;
-        // Disable any clipping
         this.renderer.localClippingEnabled = false;
 
         this.createBackgroundPlane();
@@ -186,13 +185,11 @@ class GlitchWave {
     }
 
     createBackgroundPlane() {
-        // Calculate visible area at background plane's z position
         const distance = Math.abs(this.camera.position.z - (-10));
         const vFOV = (75 * Math.PI) / 180;
         const visibleHeight = 2 * Math.tan(vFOV / 2) * distance;
         const visibleWidth = visibleHeight * this.camera.aspect;
         
-        // Make background 50% larger to ensure full coverage
         const bgGeometry = new THREE.PlaneGeometry(visibleWidth * 1.5, visibleHeight * 1.5);
         const bgMaterial = new THREE.MeshBasicMaterial({ color: this.colorScheme.bgColor });
         this.bgPlane = new THREE.Mesh(bgGeometry, bgMaterial);
@@ -202,9 +199,12 @@ class GlitchWave {
 
     createGrid() {
         const pointsPerLine = lineCount;
-        const spacing = this.gridSpacing;
-        this.lines = [];
+        // Scale grid spacing - 20% BIGGER
+        const baseSpacing = this.gridSpacing;
+        const viewportScale = Math.min(this.w, this.h) / 2000;
+        const spacing = baseSpacing * viewportScale * 1.2; // CHANGE THIS NUMBER TO ADJUST SIZE
         
+        this.lines = [];
         this.linesGroup = new THREE.Group();
         this.scene.add(this.linesGroup);
 
@@ -375,17 +375,8 @@ class GlitchWave {
 
     handleResize() {
         let dp = window.devicePixelRatio;
-        let ih = window.innerHeight * dp;
-        let iw = window.innerWidth * dp;
-        let aspectRatio = 1;
-        
-        if (ih / iw < aspectRatio) {
-            this.canvas.height = ih;
-            this.canvas.width = ih / aspectRatio;
-        } else {
-            this.canvas.width = iw;
-            this.canvas.height = iw * aspectRatio;
-        }
+        this.canvas.width = window.innerWidth * dp;
+        this.canvas.height = window.innerHeight * dp;
         
         this.w = this.canvas.width;
         this.h = this.canvas.height;
@@ -394,7 +385,6 @@ class GlitchWave {
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.w / dp, this.h / dp);
         
-        // Update background plane
         if (this.bgPlane) {
             const distance = Math.abs(this.camera.position.z - (-10));
             const vFOV = (75 * Math.PI) / 180;
@@ -407,19 +397,18 @@ class GlitchWave {
     }
 }
 
-// Create canvas like 256.art pattern
+// Create canvas
 let c = document.createElement("canvas");
+c.style.display = 'block';
+c.style.width = '100%';
+c.style.height = '100%';
 document.body.appendChild(c);
 
-// Set body background to match color scheme
+// Set body background
 const bodyBgColor = '#' + colorScheme.bgColor.toString(16).padStart(6, '0');
 document.body.style.margin = '0';
 document.body.style.padding = '0';
 document.body.style.overflow = 'hidden';
-document.body.style.display = 'flex';
-document.body.style.justifyContent = 'center';
-document.body.style.alignItems = 'center';
-document.body.style.minHeight = '100vh';
 document.body.style.backgroundColor = bodyBgColor;
 
 // Initialize
