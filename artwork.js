@@ -41,48 +41,21 @@ class Random {
 
 const R = new Random();
 
-// BLOCKCHAIN-INFLUENCED CHAOS SYSTEM
-const chaosLevels = [
-    'Serene', 'Peaceful', 'Gentle', 'Flowing', 'Steady',
-    'Turbulent', 'Chaotic', 'Fractal Chaos', 'Fractal Storm'
-];
-const blockMod = parseInt(inputData.blockNumber) % 9;
-const blockInfluencedChaos = chaosLevels[blockMod];
+// ✅ READ TRAITS FROM TRAITS.JSON (inputData comes from 256ART)
+const TRAITS = {
+    chaosLevel: inputData["Chaos Level"].value,
+    colorScheme: inputData["Color Scheme"].value,
+    wavePattern: inputData["Wave Pattern"].value,
+    gridDensity: inputData["Grid Density"].value,
+    speed: inputData["Speed"].value,
+    flashingMode: inputData["Flashing Mode"].value,
+    flicker: inputData["Flicker"].value
+};
 
-// Continuous traits
+// Continuous parameters (these can still be random)
 const flashSpeed = R.random_num(0.02, 0.06);
 const lineOpacity = 1.0;
 const gridSpacing = R.random_num(0.26, 0.32);
-
-// Trait generation
-const TRAITS = {
-    chaosLevel: blockInfluencedChaos,
-    colorScheme: R.random_choice([
-        'Classic Sunken', 'Classic Sunken', 'Green Haze', 'Green Haze', 'Purple Dream', 'Purple Dream', 'Purple Mist', 'Purple Mist',
-        'Monochrome', 'Monochrome', 'Electric Blue', 'Electric Blue', 'Royal Blue Mono', 'Royal Blue Mono',
-        'Blood Red', 'Blood Red', 'Silver Mono', 'Silver Mono', 'Bitcoin Orange', 'Bitcoin Orange', 'Red Steel', 'Red Steel', 'Cyan Solo', 'Cyan Solo',
-        'Noir Wave', 'Noir Wave', 'Ink Lines', 'Ink Lines', 'Shadow Grey', 'Shadow Grey', 'Emerald Blue', 'Emerald Blue', 'Royal Violet', 'Royal Violet', 'Neon Night', 'Neon Night', 'Pink Sunset', 'Pink Sunset',
-        'Golden Glory'
-    ]),
-    wavePattern: R.random_choice([
-        'Circular Ripple', 'Circular Ripple', 'Linear Wave', 'Linear Wave',
-        'Diagonal Sweep', 'Diagonal Sweep', 'Radial Burst', 'Radial Burst',
-        'Cross Pattern', 'Cross Pattern', 'Square Wave', 'Square Wave',
-        'Sawtooth Wave', 'Sawtooth Wave', 'Zigzag Pattern', 'Zigzag Pattern',
-        'Concentric Squares', 'Smooth Center'
-    ]),
-    gridDensity: R.random_choice(['Dense', 'Dense']),
-    speed: R.random_choice(['Glacial', 'Slow', 'Medium', 'Fast', 'Hyperactive']),
-    flashingMode: R.random_choice([
-        'None', 'None', 'None', 'Gentle Pulse', 'Gentle Pulse', 'Gentle Pulse',
-        'Rapid Strobe', 'Rapid Strobe', 'Rapid Strobe', 'Random Glitch', 'Random Glitch', 'Random Glitch',
-        'Alternating', 'Alternating', 'Alternating', 'Zebra Stripes'
-    ]),
-    flicker: R.random_choice(['None', 'Subtle', 'Moderate']),
-    flashSpeed: flashSpeed.toFixed(3),
-    lineOpacity: lineOpacity.toFixed(2),
-    gridSpacing: gridSpacing.toFixed(2)
-};
 
 // Color schemes
 const colorSchemes = {
@@ -199,10 +172,10 @@ class GlitchWave {
 
     createGrid() {
         const pointsPerLine = lineCount;
-        // Scale grid spacing - 20% BIGGER
+        // Scale grid spacing
         const baseSpacing = this.gridSpacing;
         const viewportScale = Math.min(this.w, this.h) / 2000;
-        const spacing = baseSpacing * viewportScale * 1; // CHANGE THIS NUMBER TO ADJUST SIZE
+        const spacing = baseSpacing * viewportScale * 1;
         
         this.lines = [];
         this.linesGroup = new THREE.Group();
@@ -232,7 +205,7 @@ class GlitchWave {
                 vertexColors: true,
                 transparent: true,
                 opacity: this.lineOpacity,
-                linewidth: 2
+                linewidth: 2.5
             });
             
             const line = new THREE.Line(geometry, material);
@@ -279,19 +252,7 @@ class GlitchWave {
         
         let getColorForPoint;
         
-        if (TRAITS.flashingMode === 'Alternating') {
-            getColorForPoint = (lineIndex, pointIndex) => {
-                return (lineIndex + pointIndex) % 2 === 0 
-                    ? new THREE.Color(this.colorScheme.color1) 
-                    : new THREE.Color(this.colorScheme.color2);
-            };
-        } else if (TRAITS.flashingMode === 'Zebra Stripes') {
-            getColorForPoint = (lineIndex) => {
-                return lineIndex % 2 === 0 
-                    ? new THREE.Color(this.colorScheme.color1) 
-                    : new THREE.Color(this.colorScheme.color2);
-            };
-        } else if (TRAITS.flashingMode === 'Random Glitch') {
+        if (TRAITS.flashingMode === 'Random Glitch') {
             getColorForPoint = (lineIndex) => {
                 const useColor2 = Math.random() > 0.5;
                 const color = useColor2 ? new THREE.Color(this.colorScheme.color2) : new THREE.Color(this.colorScheme.color1);
