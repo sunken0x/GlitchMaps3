@@ -198,7 +198,7 @@ class GlitchWave {
             }
             
             const geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(lineColors, 3));
+            geometry.setAttribute('color', new THREE.Float3BfufferAttribute(lineColors, 3));
             
             // ✅ 25% THICKER LINES
             const material = new THREE.LineBasicMaterial({ 
@@ -245,9 +245,11 @@ class GlitchWave {
     updateLines(time) {
         let flickerOpacity = 1.0;
         if (TRAITS.flicker === 'Subtle') {
-            flickerOpacity = 0.95 + Math.random() * 0.05;
+            // ✅ FIXED: Replaced Math.random() with R.random_dec()
+            flickerOpacity = 0.95 + R.random_dec() * 0.05;
         } else if (TRAITS.flicker === 'Moderate') {
-            flickerOpacity = 0.85 + Math.random() * 0.15;
+            // ✅ FIXED: Replaced Math.random() with R.random_dec()
+            flickerOpacity = 0.85 + R.random_dec() * 0.15;
         }
         
         // ✅ REMOVED ALTERNATING AND ZEBRA STRIPES - NO MORE LEOPARD EFFECT!
@@ -255,9 +257,11 @@ class GlitchWave {
         
         if (TRAITS.flashingMode === 'Random Glitch') {
             getColorForPoint = () => {
-                const useColor2 = Math.random() > 0.5;
+                // ✅ FIXED: Replaced Math.random() with R.random_dec()
+                const useColor2 = R.random_dec() > 0.5;
                 const color = useColor2 ? new THREE.Color(this.colorScheme.color2) : new THREE.Color(this.colorScheme.color1);
-                if (Math.random() > 0.7) {
+                // ✅ FIXED: Replaced Math.random() with R.random_dec()
+                if (R.random_dec() > 0.7) {
                     flickerOpacity = 0.5;
                 }
                 return color;
