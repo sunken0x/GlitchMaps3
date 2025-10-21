@@ -41,7 +41,7 @@ class Random {
 
 const R = new Random();
 
-// ✅ READ TRAITS FROM TRAITS.JSON (inputData comes from 256ART)
+// ✅✅✅ READ TRAITS FROM TRAITS.JSON (NOT RANDOM!) ✅✅✅
 const TRAITS = {
     chaosLevel: inputData["Chaos Level"].value,
     colorScheme: inputData["Color Scheme"].value,
@@ -172,7 +172,6 @@ class GlitchWave {
 
     createGrid() {
         const pointsPerLine = lineCount;
-        // Scale grid spacing
         const baseSpacing = this.gridSpacing;
         const viewportScale = Math.min(this.w, this.h) / 2000;
         const spacing = baseSpacing * viewportScale * 1;
@@ -201,6 +200,7 @@ class GlitchWave {
             const geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(lineColors, 3));
             
+            // ✅ 25% THICKER LINES
             const material = new THREE.LineBasicMaterial({ 
                 vertexColors: true,
                 transparent: true,
@@ -250,10 +250,11 @@ class GlitchWave {
             flickerOpacity = 0.85 + Math.random() * 0.15;
         }
         
+        // ✅ REMOVED ALTERNATING AND ZEBRA STRIPES - NO MORE LEOPARD EFFECT!
         let getColorForPoint;
         
         if (TRAITS.flashingMode === 'Random Glitch') {
-            getColorForPoint = (lineIndex) => {
+            getColorForPoint = () => {
                 const useColor2 = Math.random() > 0.5;
                 const color = useColor2 ? new THREE.Color(this.colorScheme.color2) : new THREE.Color(this.colorScheme.color1);
                 if (Math.random() > 0.7) {
