@@ -1,4 +1,6 @@
-// Glitch Maps - Full Code for GitHub Pages
+// Glitch Maps - Fixed Scope for 'speeds'
+
+console.log("Script Start - Fixing 'speeds' scope");
 
 // --- Random Class (Fully Expanded) ---
 class Random {
@@ -22,15 +24,7 @@ let R; try { R = new Random(); } catch(e) { console.error("RNG Init Error:", e);
 let TRAITS = {};
 try {
     if (typeof inputData !== 'undefined' && inputData !== null) {
-        TRAITS = {
-            chaosLevel: inputData["Chaos Level"]?.value ?? "Serene",
-            colorScheme: inputData["Color Scheme"]?.value ?? "Classic Sunken",
-            wavePattern: inputData["Wave Pattern"]?.value ?? "Linear Wave",
-            gridDensity: inputData["Grid Density"]?.value ?? "Dense",
-            speed: inputData["Speed"]?.value ?? "Medium",
-            flashingMode: inputData["Flashing Mode"]?.value ?? "None",
-            flicker: inputData["Flicker"]?.value ?? "None"
-        };
+        TRAITS = { chaosLevel: inputData["Chaos Level"]?.value ?? "Serene", colorScheme: inputData["Color Scheme"]?.value ?? "Classic Sunken", wavePattern: inputData["Wave Pattern"]?.value ?? "Linear Wave", gridDensity: inputData["Grid Density"]?.value ?? "Dense", speed: inputData["Speed"]?.value ?? "Medium", flashingMode: inputData["Flashing Mode"]?.value ?? "None", flicker: inputData["Flicker"]?.value ?? "None" };
          console.log("Traits read/defaulted:", TRAITS);
     } else {
          console.warn("inputData missing, using default traits.");
@@ -39,27 +33,28 @@ try {
 } catch (e) { console.error("Error reading traits:", e); TRAITS = { chaosLevel: "Serene", colorScheme: "Classic Sunken", wavePattern: "Linear Wave", gridDensity: "Dense", speed: "Medium", flashingMode: "None", flicker: "None" }; }
 
 // --- Definitions ---
-let selectedColorScheme, chaos, lineCount, speedMultiplier, flashSpeed, lineOpacity, gridSpacing;
+let selectedColorScheme, chaos, lineCount, speedMultiplier, speeds, flashSpeed, lineOpacity, gridSpacing; // Declare speeds here
 try {
     const colorSchemes = { 'Classic Sunken': { bgColor: 0x000a25, color1: 0x2ce1f5, color2: 0xe224e7 }, 'Green Haze': { bgColor: 0x000916, color1: 0x1bff7a, color2: 0x7aff1b }, 'Purple Dream': { bgColor: 0x090a0f, color1: 0xc92cff, color2: 0xff2c9e }, 'Purple Mist': { bgColor: 0x000916, color1: 0xc92cff, color2: 0xff2c9e }, 'Monochrome': { bgColor: 0x00070d, color1: 0x888888, color2: 0xcccccc }, 'Electric Blue': { bgColor: 0x000a25, color1: 0x00d4ff, color2: 0x0066ff }, 'Royal Blue Mono': { bgColor: 0x000510, color1: 0x4169e1, color2: 0x6495ed }, 'Blood Red': { bgColor: 0x0a0a0a, color1: 0xff0000, color2: 0xcc0000 }, 'Golden Glory': { bgColor: 0x000000, color1: 0xffd700, color2: 0xffffff }, 'Silver Mono': { bgColor: 0x0a0a0a, color1: 0xc0c0c0, color2: 0xe8e8e8 }, 'Bitcoin Orange': { bgColor: 0x0a0a0a, color1: 0xf7931a, color2: 0x808080 }, 'Red Steel': { bgColor: 0x0a0a0a, color1: 0xff4444, color2: 0x999999 }, 'Cyan Solo': { bgColor: 0x000a25, color1: 0x2ce1f5, color2: 0x2ce1f5 }, 'Noir Wave': { bgColor: 0x000a25, color1: 0x000000, color2: 0xffffff }, 'Ink Lines': { bgColor: 0xcccccc, color1: 0x000000, color2: 0x000000 }, 'Shadow Grey': { bgColor: 0x000000, color1: 0x404040, color2: 0x808080 }, 'Emerald Blue': { bgColor: 0x000a16, color1: 0x00ff88, color2: 0x0088ff }, 'Royal Violet': { bgColor: 0x000510, color1: 0x8b00ff, color2: 0x4169e1 }, 'Neon Night': { bgColor: 0x0a0a0a, color1: 0xff1493, color2: 0x00bfff }, 'Pink Sunset': { bgColor: 0x000a25, color1: 0xff1493, color2: 0xff69b4 } };
     selectedColorScheme = colorSchemes[TRAITS.colorScheme] || colorSchemes['Classic Sunken'];
     const chaosParams = { 'Serene': { glitchIntensity: 0, octaves: 1 }, 'Peaceful': { glitchIntensity: 0.3, octaves: 1 }, 'Gentle': { glitchIntensity: 0.7, octaves: 2 }, 'Flowing': { glitchIntensity: 1.2, octaves: 2 }, 'Steady': { glitchIntensity: 2.0, octaves: 2 }, 'Turbulent': { glitchIntensity: 3.0, octaves: 3 }, 'Chaotic': { glitchIntensity: 4.5, octaves: 3 }, 'Fractal Chaos': { glitchIntensity: 5.0, octaves: 4 }, 'Fractal Storm': { glitchIntensity: 5.5, octaves: 4 } };
     chaos = chaosParams[TRAITS.chaosLevel] || chaosParams['Serene'];
     const gridDensities = { 'Dense': 55 };
-    lineCount = gridDensities[TRAITS.gridDensity] || 55; // Use the trait value
-    const speeds = { 'Glacial': 0.0005, 'Slow': 0.001, 'Medium': 0.002, 'Fast': 0.004, 'Hyperactive': 0.008 };
+    lineCount = gridDensities[TRAITS.gridDensity] || 55;
+    // Define speeds object here
+    speeds = { 'Glacial': 0.0005, 'Slow': 0.001, 'Medium': 0.002, 'Fast': 0.004, 'Hyperactive': 0.008 };
     speedMultiplier = speeds[TRAITS.speed] || speeds['Medium'];
     flashSpeed = R?.random_num(0.02, 0.06) ?? 0.04;
     lineOpacity = 1.0;
     gridSpacing = R?.random_num(0.26, 0.32) ?? 0.3;
-} catch (e) { console.error("Defs Error:", e); selectedColorScheme = {bgColor:0x0, color1:0xfff, color2:0xfff}; chaos={}; lineCount=55; speedMultiplier=0.002; flashSpeed=0.04; lineOpacity=1.0; gridSpacing=0.3; }
+} catch (e) { console.error("Defs Error:", e); /* Set defaults */ selectedColorScheme = {bgColor:0x0, color1:0xfff, color2:0xfff}; chaos={}; lineCount=55; speeds={'Medium': 0.002}; speedMultiplier=0.002; flashSpeed=0.04; lineOpacity=1.0; gridSpacing=0.3; }
 
-// --- GlitchWave Class (Original Structure + Fixes) ---
+// --- GlitchWave Class ---
 class GlitchWave {
     constructor(canvas, params) {
         this.canvas = canvas;
-        this.params = params;
-        this.timeOffset = (typeof inputData !== 'undefined' && inputData?.hash) ? parseInt(inputData.hash.substr(10, 8), 16) % 100000 : Math.floor(Math.random()*100000); // Fallback for local
+        this.params = params; // Now includes speeds, speedMultiplier, flashSpeed etc.
+        this.timeOffset = (typeof inputData !== 'undefined' && inputData?.hash) ? parseInt(inputData.hash.substr(10, 8), 16) % 100000 : Math.floor(Math.random()*100000);
         this.startTime = Date.now();
         try { this.setup(); } catch(e){ console.error("Setup Error:", e); }
     }
@@ -71,11 +66,11 @@ class GlitchWave {
         try {
             this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, preserveDrawingBuffer: true, alpha: false });
             this.renderer.setSize(cw, ch); this.renderer.setPixelRatio(dp);
-            this.renderer.setClearColor(this.params.colorScheme.bgColor);
+            this.renderer.setClearColor(this.params.colorScheme.bgColor); // Use passed colorScheme
             this.renderer.autoClear = true; this.renderer.localClippingEnabled = false;
         } catch (e) { console.error("Renderer Error:", e); return; }
         try { this.createBackgroundPlane(); } catch (e) { console.error("BG Error:", e); }
-        try { this.createGrid(); } catch (e) { console.error("Grid Error:", e); } // Grid uses lineCount=55
+        try { this.createGrid(); } catch (e) { console.error("Grid Error:", e); }
         try { this.animate(); } catch (e) { console.error("Anim Start Error:", e); }
         window.addEventListener('resize', () => this.handleResize(), false);
     }
@@ -83,22 +78,25 @@ class GlitchWave {
     createBackgroundPlane() { const d=Math.abs(this.camera.position.z-(-10)); const vF=(75*Math.PI)/180; const vH=2*Math.tan(vF/2)*d; const cA=this.w/this.h; const vW=vH*cA; const g=new THREE.PlaneGeometry(vW*1.5,vH*1.5); const m=new THREE.MeshBasicMaterial({color:this.params.colorScheme.bgColor}); this.bgPlane=new THREE.Mesh(g,m); this.bgPlane.position.z=-10; this.scene.add(this.bgPlane); }
 
     createGrid() {
-        const pPL = lineCount; // 55
-        const bS = gridSpacing; const vS = Math.min(window.innerWidth, window.innerHeight) / 2000; const sp = bS * vS * 1;
+        const pPL = this.params.lineCount; // Use lineCount from params
+        const bS = this.params.gridSpacing; // Use gridSpacing from params
+        const vS = Math.min(window.innerWidth, window.innerHeight) / 2000; const sp = bS * vS * 1;
         this.lines = []; this.linesGroup = new THREE.Group(); this.scene.add(this.linesGroup);
-        for (let lY = 0; lY < lineCount; lY++) { const lP=[]; const lC=[]; const oP=[]; const yP=(lY-lineCount/2)*sp; for (let pX = 0; pX < pPL; pX++) { const xP=(pX-pPL/2)*sp; lP.push(new THREE.Vector3(xP,yP,0)); oP.push({x:xP,y:yP}); const c=new THREE.Color(this.params.colorScheme.color1); lC.push(c.r,c.g,c.b); } try { const geo=new THREE.BufferGeometry().setFromPoints(lP); geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(lC),3)); const mat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:lineOpacity,linewidth:2.5}); const ln=new THREE.Line(geo,mat); this.linesGroup.add(ln); this.lines.push({mesh:ln,originalPositions:oP}); } catch (e) { console.error(`Line ${lY} Error:`, e); } }
+        for (let lY = 0; lY < pPL; lY++) { const lP=[]; const lC=[]; const oP=[]; const yP=(lY-pPL/2)*sp; for (let pX = 0; pX < pPL; pX++) { const xP=(pX-pPL/2)*sp; lP.push(new THREE.Vector3(xP,yP,0)); oP.push({x:xP,y:yP}); const c=new THREE.Color(this.params.colorScheme.color1); lC.push(c.r,c.g,c.b); } try { const geo=new THREE.BufferGeometry().setFromPoints(lP); geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(lC),3)); const mat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:this.params.lineOpacity,linewidth:2.5}); const ln=new THREE.Line(geo,mat); this.linesGroup.add(ln); this.lines.push({mesh:ln,originalPositions:oP}); } catch (e) { console.error(`Line ${lY} Error:`, e); } }
     }
 
+    // Access speeds and speedMultiplier via this.params
     fractalNoise(x, y, time) {
-        const timeFactor = time * speedMultiplier / speeds['Medium'];
+        const timeFactor = time * this.params.speedMultiplier / (this.params.speeds['Medium'] || 0.002); // Use this.params
         const octave1 = Math.sin(x * 0.5 + timeFactor * 0.003) * Math.cos(y * 0.3 + timeFactor * 0.004);
         let result = octave1;
-        if (chaos.octaves >= 2) { result += Math.sin(x * 1.2 + timeFactor * 0.007) * Math.cos(y * 0.8 + timeFactor * 0.005) * 0.5; }
-        if (chaos.octaves >= 3) { result += Math.sin(x * 2.1 + timeFactor * 0.012) * Math.cos(y * 1.5 + timeFactor * 0.009) * 0.25 + Math.sin((x + y) * 0.2 + timeFactor * 0.002) * Math.cos((x - y) * 0.15 + timeFactor * 0.003) * 0.3; }
-        if (chaos.octaves >= 4) { result += Math.sin(x * 3.5 + timeFactor * 0.018) * Math.cos(y * 2.8 + timeFactor * 0.014) * 0.125; }
+        if (this.params.chaos.octaves >= 2) { result += Math.sin(x * 1.2 + timeFactor * 0.007) * Math.cos(y * 0.8 + timeFactor * 0.005) * 0.5; }
+        if (this.params.chaos.octaves >= 3) { result += Math.sin(x * 2.1 + timeFactor * 0.012) * Math.cos(y * 1.5 + timeFactor * 0.009) * 0.25 + Math.sin((x + y) * 0.2 + timeFactor * 0.002) * Math.cos((x - y) * 0.15 + timeFactor * 0.003) * 0.3; }
+        if (this.params.chaos.octaves >= 4) { result += Math.sin(x * 3.5 + timeFactor * 0.018) * Math.cos(y * 2.8 + timeFactor * 0.014) * 0.125; }
         return result;
      }
 
+    // Access traits via TRAITS (global), access params via this.params
     updateLines(time) {
         if (!this.lines?.length) { return; } try {
             let fO=1.0;
@@ -109,7 +107,8 @@ class GlitchWave {
             if(TRAITS.flashingMode==='Random Glitch'&&R){
                  gCP=()=>{ const u2=R.random_dec()>0.5; const cl=u2?new THREE.Color(this.params.colorScheme.color2):new THREE.Color(this.params.colorScheme.color1); if(R.random_dec()>0.7)fO=0.5; return cl; };
             } else {
-                 const effectiveFlashSpeed=(flashSpeed||0.04)*(speedMultiplier||speeds['Medium'])/speeds['Medium'];
+                 // Use flashSpeed and speedMultiplier from this.params
+                 const effectiveFlashSpeed=(this.params.flashSpeed||0.04)*(this.params.speedMultiplier||this.params.speeds['Medium'])/(this.params.speeds['Medium'] || 0.002);
                  const globalFlash = Math.sin(time * effectiveFlashSpeed) > 0;
                  const globalColor = globalFlash ? new THREE.Color(this.params.colorScheme.color2) : new THREE.Color(this.params.colorScheme.color1);
                  gCP=()=>globalColor;
@@ -139,33 +138,26 @@ class GlitchWave {
                      else if(TRAITS.wavePattern==='Concentric Squares'){const dx=Math.abs(p.x); const dy=Math.abs(p.y); const mD=Math.max(dx,dy); w=Math.sin(tF*0.001-mD*0.8)*2;}
                      else if(TRAITS.wavePattern==='Smooth Center'){const d=Math.sqrt(p.x*p.x+p.y*p.y); w=Math.sin(tF*0.0016-d*2.0)*2.5;}
 
-                     // Use original time for noise, apply speed multiplier inside fractalNoise
-                     const gO=this.fractalNoise(p.x,p.y,time)*(chaos.glitchIntensity||0);
+                     // Use chaos from this.params
+                     const gO=this.fractalNoise(p.x,p.y,time)*(this.params.chaos.glitchIntensity||0);
                      const fW=w+gO;
-                     const clr=gCP(); // Get current color
+                     const clr=gCP();
 
-                     posArr[i*3]=p.x;
-                     posArr[i*3+1]=p.y;
-                     posArr[i*3+2]=fW; // Apply wave/glitch to Z
-
-                     // Update colors dynamically if needed (Optional)
-                     // const colors = lD.mesh.geometry.attributes.color.array;
-                     // colors[i * 3] = clr.r; colors[i * 3 + 1] = clr.g; colors[i * 3 + 2] = clr.b;
-                     // lD.mesh.geometry.attributes.color.needsUpdate = true;
+                     posArr[i*3]=p.x; posArr[i*3+1]=p.y; posArr[i*3+2]=fW;
                  }
-                 lD.mesh.geometry.attributes.position.needsUpdate=true; // Mark position attribute for update
+                 lD.mesh.geometry.attributes.position.needsUpdate=true;
              });
         } catch(e){console.error("UpdateLines Error:",e);}
     }
 
     animate() {
         try {
-            requestAnimationFrame(()=>this.animate()); // Loop animation
-            if(!this.renderer||!this.scene||!this.camera){return;} // Guard clause
+            requestAnimationFrame(()=>this.animate());
+            if(!this.renderer||!this.scene||!this.camera){return;}
             const elapsed = Date.now()-this.startTime;
-            const deterministicTime = this.timeOffset + elapsed; // Calculate current time
-            this.updateLines(deterministicTime); // Update geometry
-            this.renderer.render(this.scene,this.camera); // Render the scene
+            const deterministicTime = this.timeOffset + elapsed;
+            this.updateLines(deterministicTime);
+            this.renderer.render(this.scene,this.camera);
         } catch(e){ console.error("Anim Loop Error:",e); }
     }
 
@@ -185,13 +177,22 @@ class GlitchWave {
 let c = document.createElement("canvas");
 c.style.display='block'; c.style.width='100%'; c.style.height='100%';
 document.body.appendChild(c);
-let bodyBgColor = '#000000'; // Default black
-try { if (selectedColorScheme?.bgColor != null) { bodyBgColor = '#' + selectedColorScheme.bgColor.toString(16).padStart(6, '0'); } else { console.warn("Using default BG color."); } } catch (e) { console.error("BG Color Error:", e); }
+let bodyBgColor = '#000000'; try { if (selectedColorScheme?.bgColor != null) { bodyBgColor = '#' + selectedColorScheme.bgColor.toString(16).padStart(6, '0'); } else { console.warn("Using default BG color."); } } catch (e) { console.error("BG Color Error:", e); }
 document.body.style.margin = '0'; document.body.style.padding = '0'; document.body.style.overflow = 'hidden'; document.body.style.backgroundColor = bodyBgColor;
 
 let glitchWaveInstance; // Store instance
 try {
-    const glitchParams = { flashSpeed: flashSpeed ?? 0.04, lineOpacity: lineOpacity ?? 1.0, gridSpacing: gridSpacing ?? 0.3, colorScheme: selectedColorScheme ?? { bgColor: 0x0, color1: 0xfff, color2: 0xfff } };
+    // Pass necessary variables/objects into the class instance via params
+    const glitchParams = {
+        flashSpeed: flashSpeed ?? 0.04,
+        lineOpacity: lineOpacity ?? 1.0,
+        gridSpacing: gridSpacing ?? 0.3,
+        colorScheme: selectedColorScheme ?? { bgColor: 0x0, color1: 0xfff, color2: 0xfff },
+        chaos: chaos ?? { glitchIntensity: 0, octaves: 1 }, // Pass chaos object
+        lineCount: lineCount ?? 55,                     // Pass lineCount
+        speeds: speeds ?? {'Medium': 0.002},             // Pass speeds object
+        speedMultiplier: speedMultiplier ?? 0.002       // Pass calculated speedMultiplier
+    };
     glitchWaveInstance = new GlitchWave(c, glitchParams);
 
     // --- Use the original setTimeout for platform ---
@@ -199,9 +200,9 @@ try {
         try {
              if (glitchWaveInstance?.renderer?.domElement) {
                  window.rendered = glitchWaveInstance.renderer.domElement;
-                 console.log('✅ Full GM Code (fixed) ready for preview capture');
-             } else { console.error("CRITICAL: Cannot find canvas in setTimeout."); window.rendered = c; }
-         } catch (e) { console.error("Timeout Error:", e); window.rendered = c; }
+                 console.log('✅ Full GM Code (Fixed Scope) ready for preview capture');
+             } else { console.error("CRITICAL: Cannot find canvas in setTimeout."); window.rendered = c; } // Fallback
+         } catch (e) { console.error("Timeout Error:", e); window.rendered = c; } // Fallback
     }, 1000); // Original 1-second delay
 
-} catch (e) { console.error("CRITICAL Init Error:", e); window.rendered = c; }
+} catch (e) { console.error("CRITICAL Init Error:", e); window.rendered = c; } // Fallback
