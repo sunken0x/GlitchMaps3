@@ -1,27 +1,20 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glitch Maps - Sunken 0x</title>
+    <title>Glitch Maps - Test</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; } /* Default BG */
+        canvas { display: block; width: 100vw; height: 100vh; }
+    </style>
 </head>
 <body>
-    <!-- Three.js from CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
-    <!-- Simulated inputData for testing -->
-    <script>
-        window.inputData = {
-            hash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-            tokenId: '1',
-            blockNumber: Math.floor(Math.random() * 1000000).toString(),
-            blockTimestamp: Date.now(),
-            ownerOfPiece: '0x1234567890123456789012345678901234567890',
-        };
-    </script>
-    
-    <!-- Load artwork.js -->
+    <script src="traits.js"></script>
+
+    <script src="inputData.js"></script>
+
     <script src="artwork.js"></script>
 </body>
 </html>
