@@ -76,7 +76,7 @@ const TRAITS = {
     flashingMode: R.random_choice([
         'None', 'None', 'None', 'Gentle Pulse', 'Gentle Pulse', 'Gentle Pulse',
         'Rapid Strobe', 'Rapid Strobe', 'Rapid Strobe', 'Random Glitch', 'Random Glitch', 'Random Glitch',
-        'Alternating', 'Alternating', 'Alternating', 'Zebra Stripes'
+        'Zebra Stripes'
     ]),
     flicker: R.random_choice(['None', 'Subtle', 'Moderate']),
     flashSpeed: flashSpeed.toFixed(3),
@@ -232,7 +232,7 @@ class GlitchWave {
                 vertexColors: true,
                 transparent: true,
                 opacity: this.lineOpacity,
-                linewidth: 2
+                linewidth: 2.3
             });
             
             const line = new THREE.Line(geometry, material);
@@ -279,13 +279,7 @@ class GlitchWave {
         
         let getColorForPoint;
         
-        if (TRAITS.flashingMode === 'Alternating') {
-            getColorForPoint = (lineIndex, pointIndex) => {
-                return (lineIndex + pointIndex) % 2 === 0 
-                    ? new THREE.Color(this.colorScheme.color1) 
-                    : new THREE.Color(this.colorScheme.color2);
-            };
-        } else if (TRAITS.flashingMode === 'Zebra Stripes') {
+        if (TRAITS.flashingMode === 'Zebra Stripes') {
             getColorForPoint = (lineIndex) => {
                 return lineIndex % 2 === 0 
                     ? new THREE.Color(this.colorScheme.color1) 
