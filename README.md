@@ -58,7 +58,7 @@ Circular Ripple, Linear Wave, Diagonal Sweep, Radial Burst, Cross Pattern, Squar
 
 ## Live Preview
 
-[View Live Demo](https://sunken0x.github.io/GlitchMaps/)
+[View Live Demo](https://sunken0x.github.io/GlitchMaps3/)
 
 
 
