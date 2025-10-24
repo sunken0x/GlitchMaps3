@@ -18,7 +18,7 @@ class Random {
     }
     random_dec = () => this.r(); random_num = (a, b) => a + (b - a) * this.random_dec(); random_int = (a, b) => Math.floor(this.random_num(a, b + 1)); random_bool = (p) => this.random_dec() < p; random_choice = (list) => list[this.random_int(0, list.length - 1)];
 }
-let R; try { R = new Random(); } catch(e) { console.error("RNG Init Error:", e); }
+let R; try { R = new Random(); } catch(e) { console.error("RNG Init Error:", e); R = { random_dec: Math.random, random_num: (a,b)=>a+(b-a)*Math.random(), random_int:(a,b)=>Math.floor(a+(b-a+1)*Math.random()), random_bool:(p)=>Math.random()<p, random_choice:(l)=>l[Math.floor(Math.random()*l.length)]};} // Fallback R
 
 // --- Read Traits (Using .value) ---
 let TRAITS = {};
@@ -47,7 +47,7 @@ try {
     flashSpeed = R?.random_num(0.02, 0.06) ?? 0.04;
     lineOpacity = 1.0;
     gridSpacing = R?.random_num(0.26, 0.32) ?? 0.3;
-} catch (e) { console.error("Defs Error:", e); /* Set defaults */ selectedColorScheme = {bgColor:0x0, color1:0xfff, color2:0xfff}; chaos={}; lineCount=55; speeds={'Medium': 0.002}; speedMultiplier=0.002; flashSpeed=0.04; lineOpacity=1.0; gridSpacing=0.3; }
+} catch (e) { console.error("Defs Error:", e); /* Set defaults */ selectedColorScheme = {bgColor:0x0, color1:0xfff, color2:0xfff}; chaos={glitchIntensity: 0, octaves: 1}; lineCount=55; speeds={'Medium': 0.002}; speedMultiplier=0.002; flashSpeed=0.04; lineOpacity=1.0; gridSpacing=0.3; }
 
 // --- GlitchWave Class ---
 class GlitchWave {
@@ -87,12 +87,15 @@ class GlitchWave {
 
     // Access speeds and speedMultiplier via this.params
     fractalNoise(x, y, time) {
-        const timeFactor = time * this.params.speedMultiplier / (this.params.speeds['Medium'] || 0.002); // Use this.params
+        // Ensure speeds['Medium'] exists, provide a fallback if needed
+        const mediumSpeed = (this.params.speeds && this.params.speeds['Medium']) ? this.params.speeds['Medium'] : 0.002;
+        const timeFactor = time * (this.params.speedMultiplier || mediumSpeed) / mediumSpeed; // Use this.params
         const octave1 = Math.sin(x * 0.5 + timeFactor * 0.003) * Math.cos(y * 0.3 + timeFactor * 0.004);
         let result = octave1;
-        if (this.params.chaos.octaves >= 2) { result += Math.sin(x * 1.2 + timeFactor * 0.007) * Math.cos(y * 0.8 + timeFactor * 0.005) * 0.5; }
-        if (this.params.chaos.octaves >= 3) { result += Math.sin(x * 2.1 + timeFactor * 0.012) * Math.cos(y * 1.5 + timeFactor * 0.009) * 0.25 + Math.sin((x + y) * 0.2 + timeFactor * 0.002) * Math.cos((x - y) * 0.15 + timeFactor * 0.003) * 0.3; }
-        if (this.params.chaos.octaves >= 4) { result += Math.sin(x * 3.5 + timeFactor * 0.018) * Math.cos(y * 2.8 + timeFactor * 0.014) * 0.125; }
+        // Use this.params.chaos here
+        if (this.params.chaos?.octaves >= 2) { result += Math.sin(x * 1.2 + timeFactor * 0.007) * Math.cos(y * 0.8 + timeFactor * 0.005) * 0.5; }
+        if (this.params.chaos?.octaves >= 3) { result += Math.sin(x * 2.1 + timeFactor * 0.012) * Math.cos(y * 1.5 + timeFactor * 0.009) * 0.25 + Math.sin((x + y) * 0.2 + timeFactor * 0.002) * Math.cos((x - y) * 0.15 + timeFactor * 0.003) * 0.3; }
+        if (this.params.chaos?.octaves >= 4) { result += Math.sin(x * 3.5 + timeFactor * 0.018) * Math.cos(y * 2.8 + timeFactor * 0.014) * 0.125; }
         return result;
      }
 
@@ -100,15 +103,18 @@ class GlitchWave {
     updateLines(time) {
         if (!this.lines?.length) { return; } try {
             let fO=1.0;
+            // Use global TRAITS for flicker check
             if(TRAITS.flicker==='Subtle'&&R)fO=0.95+R.random_dec()*0.05;
             else if(TRAITS.flicker==='Moderate'&&R)fO=0.85+R.random_dec()*0.15;
 
             let gCP;
+            // Use global TRAITS for flashing check
             if(TRAITS.flashingMode==='Random Glitch'&&R){
                  gCP=()=>{ const u2=R.random_dec()>0.5; const cl=u2?new THREE.Color(this.params.colorScheme.color2):new THREE.Color(this.params.colorScheme.color1); if(R.random_dec()>0.7)fO=0.5; return cl; };
             } else {
-                 // Use flashSpeed and speedMultiplier from this.params
-                 const effectiveFlashSpeed=(this.params.flashSpeed||0.04)*(this.params.speedMultiplier||this.params.speeds['Medium'])/(this.params.speeds['Medium'] || 0.002);
+                 // Use flashSpeed, speedMultiplier, speeds from this.params
+                 const mediumSpeed = (this.params.speeds && this.params.speeds['Medium']) ? this.params.speeds['Medium'] : 0.002;
+                 const effectiveFlashSpeed=(this.params.flashSpeed||0.04)*(this.params.speedMultiplier||mediumSpeed)/mediumSpeed;
                  const globalFlash = Math.sin(time * effectiveFlashSpeed) > 0;
                  const globalColor = globalFlash ? new THREE.Color(this.params.colorScheme.color2) : new THREE.Color(this.params.colorScheme.color1);
                  gCP=()=>globalColor;
@@ -125,8 +131,8 @@ class GlitchWave {
                      const p=oP[i];
                      if(!p||typeof p.x!=='number'||typeof p.y!=='number')continue;
                      let w=0;
-                     const tF=time; // Use time directly for wave patterns
-                     // Full wave pattern logic using TRAITS.wavePattern
+                     const tF=time; // Use time directly for wave patterns, noise applies multiplier
+                     // Full wave pattern logic using global TRAITS.wavePattern
                      if(TRAITS.wavePattern==='Circular Ripple'){const d=Math.sqrt(p.x*p.x+p.y*p.y); w=Math.sin(tF*0.001-d*0.6)*2;}
                      else if(TRAITS.wavePattern==='Linear Wave'){w=Math.sin(tF*0.001+p.x*2)*2;}
                      else if(TRAITS.wavePattern==='Diagonal Sweep'){w=Math.sin(tF*0.001+(p.x+p.y)*1.5)*2;}
@@ -177,12 +183,13 @@ class GlitchWave {
 let c = document.createElement("canvas");
 c.style.display='block'; c.style.width='100%'; c.style.height='100%';
 document.body.appendChild(c);
-let bodyBgColor = '#000000'; try { if (selectedColorScheme?.bgColor != null) { bodyBgColor = '#' + selectedColorScheme.bgColor.toString(16).padStart(6, '0'); } else { console.warn("Using default BG color."); } } catch (e) { console.error("BG Color Error:", e); }
+let bodyBgColor = '#000000'; // Default black
+try { if (selectedColorScheme?.bgColor != null) { bodyBgColor = '#' + selectedColorScheme.bgColor.toString(16).padStart(6, '0'); } else { console.warn("Using default BG color."); } } catch (e) { console.error("BG Color Error:", e); }
 document.body.style.margin = '0'; document.body.style.padding = '0'; document.body.style.overflow = 'hidden'; document.body.style.backgroundColor = bodyBgColor;
 
 let glitchWaveInstance; // Store instance
 try {
-    // Pass necessary variables/objects into the class instance via params
+    // Pass ALL necessary variables/objects into the class instance via params
     const glitchParams = {
         flashSpeed: flashSpeed ?? 0.04,
         lineOpacity: lineOpacity ?? 1.0,
@@ -196,6 +203,7 @@ try {
     glitchWaveInstance = new GlitchWave(c, glitchParams);
 
     // --- Use the original setTimeout for platform ---
+    // (Keep this the same as before, no changes needed here)
     setTimeout(() => {
         try {
              if (glitchWaveInstance?.renderer?.domElement) {
