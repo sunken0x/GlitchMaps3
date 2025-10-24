@@ -1,118 +1,246 @@
-// Glitch Maps - ANIMATED VERSION for 256 Art
-// Includes Math.random fix, BufferAttribute fix, uses .value for traits
+// Glitch Maps - Original Structure + Fixes (for GitHub Pages / Local Testing)
 
+// --- Random Class (Keep your full class) ---
 class Random {
-    // ... (Your full Random class code) ...
-    constructor() { let offset = 0; for (let i = 2; i < 66; i += 8) offset += parseInt(inputData.hash.substr(i, 8), 16); offset %= 7; const p = pos => parseInt(inputData.hash.substr((pos + offset), 8), 16); let a = p(2) ^ p(34), b = p(10) ^ p(42), c = p(18) ^ p(50), d = p(26) ^ p(58) ^ p(2 + (8 - offset)); this.r = () => { a |= 0; b |= 0; c |= 0; d |= 0; let t = (((a + b) | 0) + d) | 0; d = (d + 1) | 0; a = b ^ (b >>> 9); b = (c + (c << 3)) | 0; c = (c << 21) | (c >>> 11); c = (c + t) | 0; return (t >>> 0) / 4294967296; }; for (let i = 0; i < 256; i++) this.r(); }
-    random_dec = () => this.r();
-    random_num = (a, b) => a + (b - a) * this.random_dec();
-    random_int = (a, b) => Math.floor(this.random_num(a, b + 1));
-    random_bool = (p) => this.random_dec() < p;
-    random_choice = (list) => list[this.random_int(0, list.length - 1)];
+    constructor() {
+        // Use window.inputData if available (like in simulator), else default hash
+        const hash = (typeof inputData !== 'undefined' && inputData?.hash) ? inputData.hash : '0x0000000000000000000000000000000000000000000000000000000000000000';
+        let offset = 0;
+        if (hash.length < 66) { console.warn("Hash short:", hash); }
+        for (let i = 2; i < 66 && i + 8 <= hash.length; i += 8) { offset += parseInt(hash.substr(i, 8), 16) || 0; }
+        offset %= 7;
+        const p = (pos) => { const cP = pos + offset; if (cP < 0 || cP + 8 > hash.length) { return 0; } return parseInt(hash.substr(cP, 8), 16) || 0; };
+        let a = p(2) ^ p(34); let b = p(10) ^ p(42); let c = p(18) ^ p(50); let d = p(26) ^ p(58) ^ p(2 + (8 - offset));
+        this.r = () => { a |= 0; b |= 0; c |= 0; d |= 0; let t = (((a + b) | 0) + d) | 0; d = (d + 1) | 0; a = b ^ (b >>> 9); b = (c + (c << 3)) | 0; c = (c << 21) | (c >>> 11); c = (c + t) | 0; return (t >>> 0) / 4294967296; };
+        for (let i = 0; i < 256; i++) { this.r(); }
+    }
+    random_dec = () => this.r(); random_num = (a, b) => a + (b - a) * this.random_dec(); random_int = (a, b) => Math.floor(this.random_num(a, b + 1)); random_bool = (p) => this.random_dec() < p; random_choice = (list) => list[this.random_int(0, list.length - 1)];
 }
-const R = new Random();
+let R; // Declare globally
+try { R = new Random(); } catch(e) { console.error("RNG Init Error:", e); }
 
-const TRAITS = {
-    chaosLevel: inputData["Chaos Level"].value,
-    colorScheme: inputData["Color Scheme"].value,
-    wavePattern: inputData["Wave Pattern"].value,
-    gridDensity: inputData["Grid Density"].value,
-    speed: inputData["Speed"].value,
-    flashingMode: inputData["Flashing Mode"].value,
-    flicker: inputData["Flicker"].value
-};
 
-const flashSpeed = R.random_num(0.02, 0.06);
-const lineOpacity = 1.0;
-const gridSpacing = R.random_num(0.26, 0.32);
+// --- Read Traits (Original way, using .value) ---
+// This relies on inputData.js simulator creating these correctly
+let TRAITS = {};
+try {
+    // Check if inputData exists before reading
+    if (typeof inputData !== 'undefined' && inputData !== null) {
+        TRAITS = {
+            chaosLevel: inputData["Chaos Level"]?.value ?? "Serene",
+            colorScheme: inputData["Color Scheme"]?.value ?? "Classic Sunken",
+            wavePattern: inputData["Wave Pattern"]?.value ?? "Linear Wave",
+            gridDensity: inputData["Grid Density"]?.value ?? "Dense",
+            speed: inputData["Speed"]?.value ?? "Medium",
+            flashingMode: inputData["Flashing Mode"]?.value ?? "None",
+            flicker: inputData["Flicker"]?.value ?? "None"
+        };
+         console.log("Traits read/defaulted:", TRAITS);
+    } else {
+         console.warn("inputData missing, using default traits.");
+         // Set defaults directly if inputData is missing
+         TRAITS = { chaosLevel: "Serene", colorScheme: "Classic Sunken", wavePattern: "Linear Wave", gridDensity: "Dense", speed: "Medium", flashingMode: "None", flicker: "None" };
+    }
+} catch (e) {
+    console.error("Error reading traits:", e);
+    // Set defaults on error
+    TRAITS = { chaosLevel: "Serene", colorScheme: "Classic Sunken", wavePattern: "Linear Wave", gridDensity: "Dense", speed: "Medium", flashingMode: "None", flicker: "None" };
+}
 
-// Color schemes (Use your full list)
-const colorSchemes = { 'Classic Sunken': { bgColor: 0x000a25, color1: 0x2ce1f5, color2: 0xe224e7 }, /* ... */ 'Pink Sunset': { bgColor: 0x000a25, color1: 0xff1493, color2: 0xff69b4 } };
-const colorScheme = colorSchemes[TRAITS.colorScheme];
 
-// Chaos parameters (Use your full list)
-const chaosParams = { 'Serene': { glitchIntensity: 0, octaves: 1 }, /* ... */ 'Fractal Storm': { glitchIntensity: 5.5, octaves: 4 } };
-const chaos = chaosParams[TRAITS.chaosLevel];
+// --- Definitions (Full versions needed) ---
+let selectedColorScheme, chaos, lineCount, speedMultiplier, flashSpeed, lineOpacity, gridSpacing;
+try {
+    const colorSchemes = { 'Classic Sunken': { bgColor: 0x000a25, color1: 0x2ce1f5, color2: 0xe224e7 }, 'Green Haze': { bgColor: 0x000916, color1: 0x1bff7a, color2: 0x7aff1b }, 'Purple Dream': { bgColor: 0x090a0f, color1: 0xc92cff, color2: 0xff2c9e }, 'Purple Mist': { bgColor: 0x000916, color1: 0xc92cff, color2: 0xff2c9e }, 'Monochrome': { bgColor: 0x00070d, color1: 0x888888, color2: 0xcccccc }, 'Electric Blue': { bgColor: 0x000a25, color1: 0x00d4ff, color2: 0x0066ff }, 'Royal Blue Mono': { bgColor: 0x000510, color1: 0x4169e1, color2: 0x6495ed }, 'Blood Red': { bgColor: 0x0a0a0a, color1: 0xff0000, color2: 0xcc0000 }, 'Golden Glory': { bgColor: 0x000000, color1: 0xffd700, color2: 0xffffff }, 'Silver Mono': { bgColor: 0x0a0a0a, color1: 0xc0c0c0, color2: 0xe8e8e8 }, 'Bitcoin Orange': { bgColor: 0x0a0a0a, color1: 0xf7931a, color2: 0x808080 }, 'Red Steel': { bgColor: 0x0a0a0a, color1: 0xff4444, color2: 0x999999 }, 'Cyan Solo': { bgColor: 0x000a25, color1: 0x2ce1f5, color2: 0x2ce1f5 }, 'Noir Wave': { bgColor: 0x000a25, color1: 0x000000, color2: 0xffffff }, 'Ink Lines': { bgColor: 0xcccccc, color1: 0x000000, color2: 0x000000 }, 'Shadow Grey': { bgColor: 0x000000, color1: 0x404040, color2: 0x808080 }, 'Emerald Blue': { bgColor: 0x000a16, color1: 0x00ff88, color2: 0x0088ff }, 'Royal Violet': { bgColor: 0x000510, color1: 0x8b00ff, color2: 0x4169e1 }, 'Neon Night': { bgColor: 0x0a0a0a, color1: 0xff1493, color2: 0x00bfff }, 'Pink Sunset': { bgColor: 0x000a25, color1: 0xff1493, color2: 0xff69b4 } };
+    selectedColorScheme = colorSchemes[TRAITS.colorScheme] || colorSchemes['Classic Sunken'];
+    const chaosParams = { 'Serene': { glitchIntensity: 0, octaves: 1 }, 'Peaceful': { glitchIntensity: 0.3, octaves: 1 }, 'Gentle': { glitchIntensity: 0.7, octaves: 2 }, 'Flowing': { glitchIntensity: 1.2, octaves: 2 }, 'Steady': { glitchIntensity: 2.0, octaves: 2 }, 'Turbulent': { glitchIntensity: 3.0, octaves: 3 }, 'Chaotic': { glitchIntensity: 4.5, octaves: 3 }, 'Fractal Chaos': { glitchIntensity: 5.0, octaves: 4 }, 'Fractal Storm': { glitchIntensity: 5.5, octaves: 4 } };
+    chaos = chaosParams[TRAITS.chaosLevel] || chaosParams['Serene'];
+    const gridDensities = { 'Dense': 55 };
+    lineCount = gridDensities[TRAITS.gridDensity] || 55; // Use the trait value
+    const speeds = { 'Glacial': 0.0005, 'Slow': 0.001, 'Medium': 0.002, 'Fast': 0.004, 'Hyperactive': 0.008 };
+    speedMultiplier = speeds[TRAITS.speed] || speeds['Medium'];
+    flashSpeed = R?.random_num(0.02, 0.06) ?? 0.04;
+    lineOpacity = 1.0;
+    gridSpacing = R?.random_num(0.26, 0.32) ?? 0.3;
+} catch (e) { console.error("Defs Error:", e); /* Set defaults */ selectedColorScheme = {bgColor:0x0, color1:0xfff, color2:0xfff}; chaos={}; lineCount=55; speedMultiplier=0.002; flashSpeed=0.04; lineOpacity=1.0; gridSpacing=0.3; }
 
-const gridDensities = { 'Dense': 55 };
-const lineCount = gridDensities[TRAITS.gridDensity];
-
-const speeds = { 'Glacial': 0.0005, /* ... */ 'Hyperactive': 0.008 };
-const speedMultiplier = speeds[TRAITS.speed]; // Make sure this is used if needed
-
+// --- GlitchWave Class (Original Structure + Fixes - Fully Expanded) ---
 class GlitchWave {
     constructor(canvas, params) {
-        this.canvas = canvas; this.flashSpeed = params.flashSpeed; this.lineOpacity = params.lineOpacity; this.gridSpacing = params.gridSpacing; this.colorScheme = params.colorScheme;
-        this.timeOffset = parseInt(inputData.hash.substr(10, 8), 16) % 100000; this.startTime = Date.now();
-        this.setup();
+        this.canvas = canvas;
+        this.params = params;
+        // Use hash from inputData if available for time offset
+        this.timeOffset = (typeof inputData !== 'undefined' && inputData?.hash) ? parseInt(inputData.hash.substr(10, 8), 16) % 100000 : Math.floor(Math.random()*100000); // Fallback for local
+        this.startTime = Date.now();
+        try { this.setup(); } catch(e){ console.error("Setup Error:", e); }
     }
+
     setup() {
-        let dp = window.devicePixelRatio || 1; let width = window.innerWidth; let height = window.innerHeight;
-        this.canvas.width = width * dp; this.canvas.height = height * dp;
-        this.w = this.canvas.width; this.h = this.canvas.height;
-
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 2000);
-        this.camera.position.set(0, 0, 17.7); this.camera.lookAt(0, 0, 0);
-
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, preserveDrawingBuffer: true, alpha: false });
-        this.renderer.setPixelRatio(dp); this.renderer.setSize(width, height, false);
-        this.renderer.setClearColor(this.colorScheme.bgColor);
-        this.renderer.autoClear = true; this.renderer.localClippingEnabled = false;
-
-        this.createBackgroundPlane(); this.createGrid(); this.animate();
-        // No resize listener needed on platform
+        let dp = window.devicePixelRatio || 1; const cw = window.innerWidth; const ch = window.innerHeight;
+        this.canvas.width = cw * dp; this.canvas.height = ch * dp; this.w = this.canvas.width; this.h = this.canvas.height;
+        this.scene = new THREE.Scene(); this.camera = new THREE.PerspectiveCamera(75, this.w / this.h, 0.1, 2000); this.camera.position.set(0, 0, 17.7); this.camera.lookAt(0, 0, 0);
+        try {
+            this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, preserveDrawingBuffer: true, alpha: false });
+            this.renderer.setSize(cw, ch); this.renderer.setPixelRatio(dp);
+            this.renderer.setClearColor(this.params.colorScheme.bgColor);
+            this.renderer.autoClear = true; this.renderer.localClippingEnabled = false;
+        } catch (e) { console.error("Renderer Error:", e); return; }
+        try { this.createBackgroundPlane(); } catch (e) { console.error("BG Error:", e); }
+        try { this.createGrid(); } catch (e) { console.error("Grid Error:", e); } // Grid uses lineCount=55
+        try { this.animate(); } catch (e) { console.error("Anim Start Error:", e); }
+        window.addEventListener('resize', () => this.handleResize(), false);
     }
-    createBackgroundPlane() {
-        const distance = Math.abs(this.camera.position.z - (-10)); const vFOV = (this.camera.fov * Math.PI) / 180;
-        const visibleHeight = 2 * Math.tan(vFOV / 2) * distance; const visibleWidth = visibleHeight * this.camera.aspect;
-        const bgGeometry = new THREE.PlaneGeometry(visibleWidth * 1.5, visibleHeight * 1.5);
-        const bgMaterial = new THREE.MeshBasicMaterial({ color: this.colorScheme.bgColor });
-        this.bgPlane = new THREE.Mesh(bgGeometry, bgMaterial); this.bgPlane.position.z = -10; this.scene.add(this.bgPlane);
-    }
+
+    createBackgroundPlane() { const d=Math.abs(this.camera.position.z-(-10)); const vF=(75*Math.PI)/180; const vH=2*Math.tan(vF/2)*d; const cA=this.w/this.h; const vW=vH*cA; const g=new THREE.PlaneGeometry(vW*1.5,vH*1.5); const m=new THREE.MeshBasicMaterial({color:this.params.colorScheme.bgColor}); this.bgPlane=new THREE.Mesh(g,m); this.bgPlane.position.z=-10; this.scene.add(this.bgPlane); }
+
     createGrid() {
-        const pointsPerLine = lineCount; const baseSpacing = this.gridSpacing;
-        const viewportScale = Math.min(this.w / (window.devicePixelRatio || 1), this.h / (window.devicePixelRatio || 1)) / 2000; // Use CSS pixels for scale
-        const spacing = baseSpacing * viewportScale * 1;
+        const pPL = lineCount; // 55
+        const bS = gridSpacing; const vS = Math.min(window.innerWidth, window.innerHeight) / 2000; const sp = bS * vS * 1;
         this.lines = []; this.linesGroup = new THREE.Group(); this.scene.add(this.linesGroup);
+        for (let lY = 0; lY < lineCount; lY++) { const lP=[]; const lC=[]; const oP=[]; const yP=(lY-lineCount/2)*sp; for (let pX = 0; pX < pPL; pX++) { const xP=(pX-pPL/2)*sp; lP.push(new THREE.Vector3(xP,yP,0)); oP.push({x:xP,y:yP}); const c=new THREE.Color(this.params.colorScheme.color1); lC.push(c.r,c.g,c.b); } try { const geo=new THREE.BufferGeometry().setFromPoints(lP); geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(lC),3)); const mat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:lineOpacity,linewidth:2.5}); const ln=new THREE.Line(geo,mat); this.linesGroup.add(ln); this.lines.push({mesh:ln,originalPositions:oP}); } catch (e) { console.error(`Line ${lY} Error:`, e); } }
+    }
 
-        for (let lineY = 0; lineY < lineCount; lineY++) {
-            const linePoints = []; const lineColors = []; const originalPositions = [];
-            const yPos = (lineY - lineCount / 2) * spacing;
-            for (let pointX = 0; pointX < pointsPerLine; pointX++) {
-                const xPos = (pointX - pointsPerLine / 2) * spacing;
-                linePoints.push(new THREE.Vector3(xPos, yPos, 0)); originalPositions.push({ x: xPos, y: yPos });
-                const color = new THREE.Color(this.colorScheme.color1); lineColors.push(color.r, color.g, color.b);
+    // Uses global chaos and speedMultiplier
+    fractalNoise(x, y, time) {
+        const timeFactor = time * speedMultiplier / speeds['Medium']; // Apply speed multiplier here
+        const octave1 = Math.sin(x * 0.5 + timeFactor * 0.003) * Math.cos(y * 0.3 + timeFactor * 0.004);
+        let result = octave1;
+        if (chaos.octaves >= 2) { result += Math.sin(x * 1.2 + timeFactor * 0.007) * Math.cos(y * 0.8 + timeFactor * 0.005) * 0.5; }
+        if (chaos.octaves >= 3) { result += Math.sin(x * 2.1 + timeFactor * 0.012) * Math.cos(y * 1.5 + timeFactor * 0.009) * 0.25 + Math.sin((x + y) * 0.2 + timeFactor * 0.002) * Math.cos((x - y) * 0.15 + timeFactor * 0.003) * 0.3; }
+        if (chaos.octaves >= 4) { result += Math.sin(x * 3.5 + timeFactor * 0.018) * Math.cos(y * 2.8 + timeFactor * 0.014) * 0.125; }
+        return result;
+     }
+
+    // Uses global TRAIT variables and R
+    updateLines(time) {
+        if (!this.lines?.length) { return; } try {
+            let fO=1.0; // Use global lineOpacity as base? Let's keep it 1.0 for now.
+            if(TRAITS.flicker==='Subtle'&&R)fO=0.95+R.random_dec()*0.05; // Use R if available
+            else if(TRAITS.flicker==='Moderate'&&R)fO=0.85+R.random_dec()*0.15; // Use R if available
+
+            let gCP; // getColorForPoint function
+            if(TRAITS.flashingMode==='Random Glitch'&&R){ // Use R if available
+                 gCP=()=>{ const u2=R.random_dec()>0.5; const cl=u2?new THREE.Color(this.params.colorScheme.color2):new THREE.Color(this.params.colorScheme.color1); if(R.random_dec()>0.7)fO=0.5; return cl; };
+            } else {
+                 const effectiveFlashSpeed=(flashSpeed||0.04)*(speedMultiplier||speeds['Medium'])/speeds['Medium']; // Adjust flash speed based on speed trait
+                 const globalFlash = Math.sin(time * effectiveFlashSpeed) > 0;
+                 const globalColor = globalFlash ? new THREE.Color(this.params.colorScheme.color2) : new THREE.Color(this.params.colorScheme.color1);
+                 gCP=()=>globalColor;
             }
-            const geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-            geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(lineColors), 3)); // FIXED
-            const material = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: this.lineOpacity, linewidth: 2.5 });
-            const line = new THREE.Line(geometry, material); this.linesGroup.add(line);
-            this.lines.push({ mesh: line, originalPositions: originalPositions });
+
+            this.lines.forEach((lD)=>{
+                 if(!lD?.mesh?.geometry?.attributes?.position||!lD?.originalPositions){return;}
+                 const posArr=lD.mesh.geometry.attributes.position.array;
+                 const oP=lD.originalPositions;
+                 if(posArr.length!==oP.length*3){console.warn("Pos array length mismatch"); return;} // Warn if mismatch
+                 lD.mesh.material.opacity = fO; // Apply flicker opacity
+
+                 for(let i=0; i<oP.length; i++){
+                     const p=oP[i];
+                     if(!p||typeof p.x!=='number'||typeof p.y!=='number')continue;
+                     let w=0;
+                     const tF=time; // Use time directly here, fractalNoise applies multiplier internally
+                     // Full wave pattern logic using TRAITS.wavePattern
+                     if(TRAITS.wavePattern==='Circular Ripple'){const d=Math.sqrt(p.x*p.x+p.y*p.y); w=Math.sin(tF*0.001-d*0.6)*2;} // Original speed factor
+                     else if(TRAITS.wavePattern==='Linear Wave'){w=Math.sin(tF*0.001+p.x*2)*2;} // Original speed factor
+                     else if(TRAITS.wavePattern==='Diagonal Sweep'){w=Math.sin(tF*0.001+(p.x+p.y)*1.5)*2;} // Original speed factor
+                     else if(TRAITS.wavePattern==='Radial Burst'){const a=Math.atan2(p.y,p.x); w=Math.sin(tF*0.002+a*3)*2;} // Original speed factor
+                     else if(TRAITS.wavePattern==='Cross Pattern'){w=Math.sin(tF*0.001+p.x*2)*Math.cos(tF*0.001+p.y*2)*2;} // Original speed factor
+                     else if(TRAITS.wavePattern==='Square Wave'){w=Math.sin(tF*0.001+p.x*1.5)*2.2;} // Original speed factor
+                     else if(TRAITS.wavePattern==='Sawtooth Wave'){const ph=(tF*0.001+p.x*2)%(Math.PI*2); w=((ph/Math.PI)-1)*2;} // Original speed factor
+                     else if(TRAITS.wavePattern==='Zigzag Pattern'){const d1=Math.sin(tF*0.001+(p.x+p.y)*1.5); const d2=Math.sin(tF*0.001+(p.x-p.y)*1.5); w=(d1+d2)*1.2;} // Original speed factor
+                     else if(TRAITS.wavePattern==='Concentric Squares'){const dx=Math.abs(p.x); const dy=Math.abs(p.y); const mD=Math.max(dx,dy); w=Math.sin(tF*0.001-mD*0.8)*2;} // Original speed factor
+                     else if(TRAITS.wavePattern==='Smooth Center'){const d=Math.sqrt(p.x*p.x+p.y*p.y); w=Math.sin(tF*0.0016-d*2.0)*2.5;} // Original speed factor
+
+                     const gO=this.fractalNoise(p.x,p.y,time)*(chaos.glitchIntensity||0); // Pass original time to noise
+                     const fW=w+gO;
+                     const clr=gCP(); // Get current color
+
+                     posArr[i*3]=p.x;
+                     posArr[i*3+1]=p.y;
+                     posArr[i*3+2]=fW; // Apply wave/glitch to Z
+
+                     // Update colors if needed (using BufferAttribute)
+                     // const colors = lD.mesh.geometry.attributes.color.array;
+                     // colors[i * 3] = clr.r; colors[i * 3 + 1] = clr.g; colors[i * 3 + 2] = clr.b;
+                     // lD.mesh.geometry.attributes.color.needsUpdate = true; // Only if colors change dynamically
+                 }
+                 lD.mesh.geometry.attributes.position.needsUpdate=true; // Mark position attribute for update
+             });
+        } catch(e){console.error("UpdateLines Error:",e);}
+    }
+
+
+    animate() {
+        try {
+            requestAnimationFrame(()=>this.animate()); // Loop animation
+            if(!this.renderer||!this.scene||!this.camera){return;} // Guard clause
+            const elapsed = Date.now()-this.startTime;
+            const deterministicTime = this.timeOffset + elapsed; // Calculate current time based on offset and elapsed
+            this.updateLines(deterministicTime); // Update geometry based on time
+            this.renderer.render(this.scene,this.camera); // Render the scene
+        } catch(e){
+            console.error("Anim Loop Error:",e);
+            // Optionally add code here to stop the loop on error
         }
     }
-    fractalNoise(x, y, time) {
-        // ... (Your full fractal noise code) ...
-        let result = Math.sin(x * 0.5 + time * 0.003) * Math.cos(y * 0.3 + time * 0.004); if (chaos.octaves >= 2) result += Math.sin(x * 1.2 + time * 0.007) * Math.cos(y * 0.8 + time * 0.005) * 0.5; if (chaos.octaves >= 3) result += Math.sin(x * 2.1 + time * 0.012) * Math.cos(y * 1.5 + time * 0.009) * 0.25 + Math.sin((x + y) * 0.2 + time * 0.002) * Math.cos((x - y) * 0.15 + time * 0.003) * 0.3; if (chaos.octaves >= 4) result += Math.sin(x * 3.5 + time * 0.018) * Math.cos(y * 2.8 + time * 0.014) * 0.125; return result;
-    }
-    updateLines(time) {
-        // ... (Your full updateLines code using R.random_dec() for randomness) ...
-        let flickerOpacity = 1.0; if (TRAITS.flicker === 'Subtle') flickerOpacity = 0.95 + R.random_dec() * 0.05; else if (TRAITS.flicker === 'Moderate') flickerOpacity = 0.85 + R.random_dec() * 0.15;
-        let getColorForPoint; if (TRAITS.flashingMode === 'Random Glitch') { getColorForPoint = () => { const useColor2 = R.random_dec() > 0.5; const color = useColor2 ? new THREE.Color(this.colorScheme.color2) : new THREE.Color(this.colorScheme.color1); if (R.random_dec() > 0.7) flickerOpacity = 0.5; return color; }; } else { const globalFlash = Math.sin(time * this.flashSpeed) > 0; const globalColor = globalFlash ? new THREE.Color(this.colorScheme.color2) : new THREE.Color(this.colorScheme.color1); getColorForPoint = () => globalColor; }
-        this.lines.forEach((lineData) => { const { mesh, originalPositions } = lineData; const newPoints = []; const newColors = []; mesh.material.opacity = flickerOpacity; for (let i = 0; i < originalPositions.length; i++) { const pos = originalPositions[i]; let wave = 0; /* ... Your full wave pattern logic ... */ if (TRAITS.wavePattern === 'Circular Ripple') wave = Math.sin(time * 0.001 - Math.sqrt(pos.x * pos.x + pos.y * pos.y) * 0.6) * 2; else if (TRAITS.wavePattern === 'Linear Wave') wave = Math.sin(time * 0.001 + pos.x * 2) * 2; /* ... etc ... */ else if (TRAITS.wavePattern === 'Smooth Center') wave = Math.sin(time * 0.0016 - Math.sqrt(pos.x * pos.x + pos.y * pos.y) * 2.0) * 2.5; const glitchOffset = this.fractalNoise(pos.x, pos.y, time) * chaos.glitchIntensity; const finalWave = wave + glitchOffset; const color = getColorForPoint(i); newPoints.push(pos.x, pos.y, finalWave); newColors.push(color.r, color.g, color.b); } mesh.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(newPoints), 3)); mesh.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(newColors), 3)); mesh.geometry.attributes.position.needsUpdate = true; mesh.geometry.attributes.color.needsUpdate = true; });
-    }
-    animate(time = 0) {
-        requestAnimationFrame((t) => this.animate(t)); // Keep the loop
-        const elapsed = Date.now() - this.startTime; const deterministicTime = this.timeOffset + elapsed;
-        this.updateLines(deterministicTime); this.renderer.render(this.scene, this.camera);
-    }
-    // No handleResize needed for platform
+
+    handleResize() {
+        try {
+            let dp=window.devicePixelRatio||1; const nW=window.innerWidth; const nH=window.innerHeight;
+            this.canvas.width=nW*dp; this.canvas.height=nH*dp; this.w=this.canvas.width; this.h=this.canvas.height;
+            if(this.renderer){this.renderer.setSize(nW,nH);}
+            if(this.camera){this.camera.aspect=nW/nH; this.camera.updateProjectionMatrix();}
+            if(this.bgPlane){const d=Math.abs(this.camera.position.z-(-10)); const vF=(75*Math.PI)/180; const vH=2*Math.tan(vF/2)*d; const vW=vH*this.camera.aspect; this.bgPlane.geometry.dispose(); this.bgPlane.geometry=new THREE.PlaneGeometry(vW*1.5,vH*1.5);}
+            // console.log("Resized");
+        } catch(e){
+            console.error("Resize Error:",e);
+        }
+     }
+} // End GlitchWave Class
+
+// --- Initialization ---
+let c = document.createElement("canvas");
+c.style.display='block'; c.style.width='100%'; c.style.height='100%';
+document.body.appendChild(c);
+let bodyBgColor = '#000000'; // Default black
+try {
+     // Ensure selectedColorScheme and bgColor exist and are numbers
+     if (selectedColorScheme && typeof selectedColorScheme.bgColor === 'number') {
+        bodyBgColor = '#' + selectedColorScheme.bgColor.toString(16).padStart(6, '0');
+     } else { console.warn("Using default BG color because scheme/bgColor invalid."); }
+ } catch (e) { console.error("BG Color Error:", e); }
+document.body.style.margin = '0'; document.body.style.padding = '0'; document.body.style.overflow = 'hidden'; document.body.style.backgroundColor = bodyBgColor;
+
+let glitchWaveInstance; // Store instance
+try {
+    // console.log("Initializing GlitchWave...");
+    // Ensure params passed are valid or have defaults
+    const glitchParams = {
+        flashSpeed: flashSpeed ?? 0.04,
+        lineOpacity: lineOpacity ?? 1.0,
+        gridSpacing: gridSpacing ?? 0.3,
+        colorScheme: selectedColorScheme ?? { bgColor: 0x000a25, color1: 0x2ce1f5, color2: 0xe224e7 } // Provide default scheme object
+    };
+    glitchWaveInstance = new GlitchWave(c, glitchParams);
+    // console.log("GlitchWave initialized.");
+
+    // --- Use the original setTimeout ---
+    setTimeout(() => {
+        // console.log("setTimeout callback...");
+        try {
+             // Check instance and renderer again before setting
+             if (glitchWaveInstance?.renderer?.domElement) {
+                 window.rendered = glitchWaveInstance.renderer.domElement;
+                 console.log('✅ Full GM Code + Founder Traits Test ready');
+             } else { console.error("CRITICAL: Cannot find canvas in setTimeout."); window.rendered = c; } // Fallback
+         } catch (e) { console.error("Timeout Error:", e); window.rendered = c; } // Fallback
+    }, 1000); // Original 1-second delay
+
+} catch (e) {
+    console.error("CRITICAL Init Error:", e);
+    window.rendered = c; // Fallback immediately on critical error
+    // console.log("Fallback window.rendered set due to init error.");
 }
 
-let c = document.createElement("canvas"); c.style.display = 'block'; c.style.width = '100%'; c.style.height = '100%'; document.body.appendChild(c);
-const bodyBgColor = '#' + colorScheme.bgColor.toString(16).padStart(6, '0'); document.body.style.margin = '0'; document.body.style.padding = '0'; document.body.style.overflow = 'hidden'; document.body.style.backgroundColor = bodyBgColor;
-
-const glitchWave = new GlitchWave(c, { flashSpeed, lineOpacity, gridSpacing, colorScheme });
-
-// Use the original setTimeout
-setTimeout(() => { window.rendered = c; console.log('✅ Glitch Maps ready for 256.art'); }, 1000);
+// console.log("Script End");
